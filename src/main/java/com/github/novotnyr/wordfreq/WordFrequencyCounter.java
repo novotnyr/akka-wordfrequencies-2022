@@ -2,6 +2,7 @@ package com.github.novotnyr.wordfreq;
 
 import akka.actor.typed.ActorRef;
 import akka.actor.typed.Behavior;
+import akka.actor.typed.PostStop;
 import akka.actor.typed.PreRestart;
 import akka.actor.typed.javadsl.AbstractBehavior;
 import akka.actor.typed.javadsl.ActorContext;
@@ -28,6 +29,7 @@ public class WordFrequencyCounter extends AbstractBehavior<Command> {
                 .onMessage(CountWordFrequencies.class, this::countWordFrequencies)
                 .onMessage(GetWordFrequencies.class, this::getWordFrequencies)
                 .onSignal(PreRestart.class, this::onPreRestart)
+                .onSignal(PostStop.class, this::onPostStop)
                 .build();
     }
 
@@ -42,11 +44,11 @@ public class WordFrequencyCounter extends AbstractBehavior<Command> {
         var wordFrequencies = Utils.getWordFrequencies(sentence);
         var replyTo = command.replyTo();
 
-        if (Math.random() < 0.5) {
+        if (Math.random() < 0) {
             throw new IllegalStateException("Unable to handle sentence '" + sentence + "'");
         }
 
-        if (Math.random() < 0.5) {
+        if (Math.random() < 1) {
             throw new UnsupportedOperationException("Unable to support handling of sentence '" + sentence + "'");
         }
 
@@ -58,6 +60,11 @@ public class WordFrequencyCounter extends AbstractBehavior<Command> {
 
     private Behavior<Command> onPreRestart(PreRestart signal) {
         getContext().getLog().warn("About to restart");
+        return Behaviors.same();
+    }
+
+    private Behavior<Command> onPostStop(PostStop signal) {
+        getContext().getLog().warn("Actor has been stopped");
         return Behaviors.same();
     }
 
