@@ -13,9 +13,12 @@ import java.util.Map;
 public class Coordinator extends AbstractBehavior<Coordinator.Command> {
     private ActorRef<WordFrequencyCounter.Command> workers;
 
+    private ActorRef<WordFrequencyCounter.FrequenciesCalculated> messageAdapter;
+
     public Coordinator(ActorContext<Command> context) {
         super(context);
         this.workers = context.spawn(createPool(), "workers");
+        this.messageAdapter = context.messageAdapter(WordFrequencyCounter.FrequenciesCalculated.class, this::onFrequenciesCalculated);
     }
 
     public static Behavior<Command> create() {
@@ -41,6 +44,10 @@ public class Coordinator extends AbstractBehavior<Coordinator.Command> {
         this.workers.tell(workerCommand);
 
         return Behaviors.same();
+    }
+
+    private Command onFrequenciesCalculated(WordFrequencyCounter.FrequenciesCalculated event) {
+        return new AggregateWordFrequencies(event.frequencies());
     }
 
     public interface Command {};
