@@ -8,6 +8,8 @@ import akka.actor.typed.javadsl.Behaviors;
 import akka.actor.typed.javadsl.Receive;
 import akka.actor.typed.javadsl.Routers;
 
+import java.util.Map;
+
 public class Coordinator extends AbstractBehavior<Coordinator.Command> {
     private ActorRef<WordFrequencyCounter.Command> workers;
 
@@ -47,4 +49,5 @@ public class Coordinator extends AbstractBehavior<Coordinator.Command> {
 
     public record CountWordFrequencies(String sentence) implements Command{}
 
+    public record AggregateWordFrequencies(Map<String, Long> frequencies) implements Command{}
 }
