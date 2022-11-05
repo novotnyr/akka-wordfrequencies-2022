@@ -48,7 +48,7 @@ public class WordFrequencyCounter extends AbstractBehavior<Command> {
             throw new IllegalStateException("Unable to handle sentence '" + sentence + "'");
         }
 
-        if (Math.random() < 1) {
+        if (Math.random() < 0) {
             throw new UnsupportedOperationException("Unable to support handling of sentence '" + sentence + "'");
         }
 
