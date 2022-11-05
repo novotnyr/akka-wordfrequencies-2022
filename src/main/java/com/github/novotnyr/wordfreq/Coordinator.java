@@ -6,17 +6,22 @@ import akka.actor.typed.javadsl.AbstractBehavior;
 import akka.actor.typed.javadsl.ActorContext;
 import akka.actor.typed.javadsl.Behaviors;
 import akka.actor.typed.javadsl.Receive;
+import akka.actor.typed.javadsl.Routers;
 
 public class Coordinator extends AbstractBehavior<Coordinator.Command> {
     private ActorRef<WordFrequencyCounter.Command> workers;
 
     public Coordinator(ActorContext<Command> context) {
         super(context);
-        this.workers = context.spawn(WordFrequencyCounter.create(), "workers");
+        this.workers = context.spawn(createPool(), "workers");
     }
 
     public static Behavior<Command> create() {
         return Behaviors.setup(Coordinator::new);
+    }
+
+    private static Behavior<WordFrequencyCounter.Command> createPool() {
+        return Routers.pool(3, WordFrequencyCounter.create());
     }
 
     @Override
