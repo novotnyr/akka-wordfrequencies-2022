@@ -40,7 +40,7 @@ public class Coordinator extends AbstractBehavior<Coordinator.Command> {
         String sentence = command.sentence();
         getContext().getLog().debug("Received sentence '{}'", sentence);
 
-        var workerCommand = new WordFrequencyCounter.CountWordFrequencies(sentence);
+        var workerCommand = new WordFrequencyCounter.GetWordFrequencies(sentence, this.messageAdapter);
         this.workers.tell(workerCommand);
 
         return Behaviors.same();
