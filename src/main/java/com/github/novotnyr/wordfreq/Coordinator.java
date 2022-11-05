@@ -33,6 +33,7 @@ public class Coordinator extends AbstractBehavior<Coordinator.Command> {
     public Receive<Command> createReceive() {
         return newReceiveBuilder()
                 .onMessage(CountWordFrequencies.class, this::calculateWordFrequencies)
+                .onMessage(AggregateWordFrequencies.class, this::aggregateWordFrequencies)
                 .build();
     }
 
@@ -43,6 +44,11 @@ public class Coordinator extends AbstractBehavior<Coordinator.Command> {
         var workerCommand = new WordFrequencyCounter.GetWordFrequencies(sentence, this.messageAdapter);
         this.workers.tell(workerCommand);
 
+        return Behaviors.same();
+    }
+
+    private Behavior<Command> aggregateWordFrequencies(AggregateWordFrequencies command) {
+        getContext().getLog().debug("Received partial results: '{}'", command.frequencies());
         return Behaviors.same();
     }
 
