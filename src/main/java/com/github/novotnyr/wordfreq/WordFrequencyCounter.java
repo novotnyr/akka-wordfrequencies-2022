@@ -40,6 +40,10 @@ public class WordFrequencyCounter extends AbstractBehavior<Command> {
         var wordFrequencies = Utils.getWordFrequencies(sentence);
         var replyTo = command.replyTo();
 
+        if (Math.random() < 0.5) {
+            throw new IllegalStateException("Unable to handle sentence '" + sentence + "'");
+        }
+
         getContext().getLog().debug("Reply to {} on sentence '{}': {}", replyTo, sentence, wordFrequencies);
         replyTo.tell(new FrequenciesCalculated(wordFrequencies));
 
