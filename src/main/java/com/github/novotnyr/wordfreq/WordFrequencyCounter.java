@@ -2,6 +2,7 @@ package com.github.novotnyr.wordfreq;
 
 import akka.actor.typed.ActorRef;
 import akka.actor.typed.Behavior;
+import akka.actor.typed.PreRestart;
 import akka.actor.typed.javadsl.AbstractBehavior;
 import akka.actor.typed.javadsl.ActorContext;
 import akka.actor.typed.javadsl.Behaviors;
@@ -26,6 +27,7 @@ public class WordFrequencyCounter extends AbstractBehavior<Command> {
         return newReceiveBuilder()
                 .onMessage(CountWordFrequencies.class, this::countWordFrequencies)
                 .onMessage(GetWordFrequencies.class, this::getWordFrequencies)
+                .onSignal(PreRestart.class, this::onPreRestart)
                 .build();
     }
 
@@ -47,6 +49,11 @@ public class WordFrequencyCounter extends AbstractBehavior<Command> {
         getContext().getLog().debug("Reply to {} on sentence '{}': {}", replyTo, sentence, wordFrequencies);
         replyTo.tell(new FrequenciesCalculated(wordFrequencies));
 
+        return Behaviors.same();
+    }
+
+    private Behavior<Command> onPreRestart(PreRestart signal) {
+        getContext().getLog().warn("About to restart");
         return Behaviors.same();
     }
 
