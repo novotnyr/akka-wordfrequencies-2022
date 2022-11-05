@@ -8,12 +8,15 @@ import akka.actor.typed.javadsl.Behaviors;
 import akka.actor.typed.javadsl.Receive;
 import akka.actor.typed.javadsl.Routers;
 
+import java.util.HashMap;
 import java.util.Map;
 
 public class Coordinator extends AbstractBehavior<Coordinator.Command> {
     private ActorRef<WordFrequencyCounter.Command> workers;
 
     private ActorRef<WordFrequencyCounter.FrequenciesCalculated> messageAdapter;
+
+    private Map<String, Long> allFrequencies = new HashMap<>();
 
     public Coordinator(ActorContext<Command> context) {
         super(context);
@@ -48,7 +51,13 @@ public class Coordinator extends AbstractBehavior<Coordinator.Command> {
     }
 
     private Behavior<Command> aggregateWordFrequencies(AggregateWordFrequencies command) {
-        getContext().getLog().debug("Received partial results: '{}'", command.frequencies());
+        var partialFrequencies = command.frequencies();
+        getContext().getLog().debug("Received partial results: '{}'", partialFrequencies);
+
+        this.allFrequencies = Utils.mergeAndSumValues(this.allFrequencies, partialFrequencies);
+
+        getContext().getLog().debug("Global frequencies: '{}'", this.allFrequencies);
+
         return Behaviors.same();
     }
 
