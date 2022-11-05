@@ -7,7 +7,6 @@ import akka.actor.typed.javadsl.Behaviors;
 import akka.actor.typed.javadsl.Receive;
 
 public class Coordinator extends AbstractBehavior<Coordinator.Command> {
-
     public Coordinator(ActorContext<Command> context) {
         super(context);
     }
@@ -24,6 +23,7 @@ public class Coordinator extends AbstractBehavior<Coordinator.Command> {
     }
 
     private Behavior<Command> calculateWordFrequencies(CountWordFrequencies command) {
+        getContext().getLog().debug("{}", command.sentence());
         return Behaviors.same();
     }
 
