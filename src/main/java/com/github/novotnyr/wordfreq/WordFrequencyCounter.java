@@ -28,6 +28,7 @@ public class WordFrequencyCounter extends AbstractBehavior<Command> {
         return newReceiveBuilder()
                 .onMessage(CountWordFrequencies.class, this::countWordFrequencies)
                 .onMessage(GetWordFrequencies.class, this::getWordFrequencies)
+                .onMessage(Shutdown.class, this::shutdown)
                 .onSignal(PreRestart.class, this::onPreRestart)
                 .onSignal(PostStop.class, this::onPostStop)
                 .build();
@@ -58,6 +59,12 @@ public class WordFrequencyCounter extends AbstractBehavior<Command> {
         return Behaviors.same();
     }
 
+    private Behavior<Command> shutdown(Shutdown command) {
+        getContext().getLog().info("Shutting down");
+        return Behaviors.stopped();
+    }
+
+
     private Behavior<Command> onPreRestart(PreRestart signal) {
         getContext().getLog().warn("About to restart");
         return Behaviors.same();
@@ -81,4 +88,6 @@ public class WordFrequencyCounter extends AbstractBehavior<Command> {
 
     public record FrequenciesCalculated(Map<String, Long> frequencies) implements Event {
     }
+
+    public record Shutdown() implements Command {}
 }
