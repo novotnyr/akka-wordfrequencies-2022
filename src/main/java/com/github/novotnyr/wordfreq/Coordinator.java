@@ -2,6 +2,7 @@ package com.github.novotnyr.wordfreq;
 
 import akka.actor.typed.ActorRef;
 import akka.actor.typed.Behavior;
+import akka.actor.typed.SupervisorStrategy;
 import akka.actor.typed.javadsl.AbstractBehavior;
 import akka.actor.typed.javadsl.ActorContext;
 import akka.actor.typed.javadsl.Behaviors;
@@ -29,7 +30,12 @@ public class Coordinator extends AbstractBehavior<Coordinator.Command> {
     }
 
     private static Behavior<WordFrequencyCounter.Command> createPool() {
-        return Routers.pool(3, WordFrequencyCounter.create());
+        return Routers.pool(3, createSupervisedWorker());
+    }
+
+    private static Behavior<WordFrequencyCounter.Command> createSupervisedWorker() {
+        return Behaviors.supervise(WordFrequencyCounter.create())
+                        .onFailure(IllegalStateException.class, SupervisorStrategy.restart());
     }
 
     @Override
