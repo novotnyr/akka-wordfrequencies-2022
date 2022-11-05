@@ -6,6 +6,8 @@ import akka.actor.typed.javadsl.ActorContext;
 import akka.actor.typed.javadsl.Behaviors;
 import akka.actor.typed.javadsl.Receive;
 
+ import java.util.Map;
+
  import static com.github.novotnyr.wordfreq.Utils.getWordFrequencies;
  import static com.github.novotnyr.wordfreq.WordFrequencyCounter.Command;
 
@@ -39,5 +41,8 @@ public class WordFrequencyCounter extends AbstractBehavior<Command> {
     }
 
     public record CountWordFrequencies(String sentence) implements Command {
+    }
+
+    public record FrequenciesCalculated(Map<String, Long> frequencies) implements Event {
     }
 }
