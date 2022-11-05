@@ -1,15 +1,15 @@
 package com.github.novotnyr.wordfreq;
 
- import akka.actor.typed.Behavior;
+import akka.actor.typed.ActorRef;
+import akka.actor.typed.Behavior;
 import akka.actor.typed.javadsl.AbstractBehavior;
 import akka.actor.typed.javadsl.ActorContext;
 import akka.actor.typed.javadsl.Behaviors;
 import akka.actor.typed.javadsl.Receive;
 
- import java.util.Map;
+import java.util.Map;
 
- import static com.github.novotnyr.wordfreq.Utils.getWordFrequencies;
- import static com.github.novotnyr.wordfreq.WordFrequencyCounter.Command;
+import static com.github.novotnyr.wordfreq.WordFrequencyCounter.Command;
 
 public class WordFrequencyCounter extends AbstractBehavior<Command> {
 
@@ -25,12 +25,24 @@ public class WordFrequencyCounter extends AbstractBehavior<Command> {
     public Receive<Command> createReceive() {
         return newReceiveBuilder()
                 .onMessage(CountWordFrequencies.class, this::countWordFrequencies)
+                .onMessage(GetWordFrequencies.class, this::getWordFrequencies)
                 .build();
     }
 
     private Behavior<Command> countWordFrequencies(CountWordFrequencies command) {
         String sentence = command.sentence();
-        getContext().getLog().debug("Sentence '{}': {}", sentence, getWordFrequencies(sentence));
+        getContext().getLog().debug("Sentence '{}': {}", sentence, Utils.getWordFrequencies(sentence));
+        return Behaviors.same();
+    }
+
+    private Behavior<Command> getWordFrequencies(GetWordFrequencies command) {
+        String sentence = command.sentence();
+        var wordFrequencies = Utils.getWordFrequencies(sentence);
+        var replyTo = command.replyTo();
+
+        getContext().getLog().debug("Reply to {} on sentence '{}': {}", replyTo, sentence, wordFrequencies);
+        replyTo.tell(new FrequenciesCalculated(wordFrequencies));
+
         return Behaviors.same();
     }
 
@@ -42,6 +54,8 @@ public class WordFrequencyCounter extends AbstractBehavior<Command> {
 
     public record CountWordFrequencies(String sentence) implements Command {
     }
+
+    public record GetWordFrequencies(String sentence, ActorRef<FrequenciesCalculated> replyTo) implements Command {};
 
     public record FrequenciesCalculated(Map<String, Long> frequencies) implements Event {
     }
