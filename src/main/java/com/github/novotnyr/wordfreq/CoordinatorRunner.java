@@ -20,5 +20,7 @@ public class CoordinatorRunner {
         for (String sentence : sentences) {
             system.tell(new Coordinator.CountWordFrequencies(sentence));
         }
+
+        system.tell(Coordinator.Command.EOF);
     }
 }

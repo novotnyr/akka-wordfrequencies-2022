@@ -33,7 +33,8 @@ public class Coordinator extends AbstractBehavior<Coordinator.Command> {
     }
 
     private static Behavior<WordFrequencyCounter.Command> createPool() {
-        return Routers.pool(3, createSupervisedWorker());
+        return Routers.pool(3, createSupervisedWorker())
+                      .withBroadcastPredicate(WordFrequencyCounter.Shutdown.class::isInstance);
     }
 
     private static Behavior<WordFrequencyCounter.Command> createSupervisedWorker() {
@@ -47,6 +48,7 @@ public class Coordinator extends AbstractBehavior<Coordinator.Command> {
         return newReceiveBuilder()
                 .onMessage(CountWordFrequencies.class, this::calculateWordFrequencies)
                 .onMessage(AggregateWordFrequencies.class, this::aggregateWordFrequencies)
+                .onMessage(Eof.class, this::eof)
                 .onSignal(Terminated.class, this::onTerminated)
                 .build();
     }
@@ -72,6 +74,10 @@ public class Coordinator extends AbstractBehavior<Coordinator.Command> {
         return Behaviors.same();
     }
 
+    private Behavior<Command> eof(Eof eof) {
+        this.workers.tell(new WordFrequencyCounter.Shutdown());
+        return Behaviors.same();
+    }
     private Command onFrequenciesCalculated(WordFrequencyCounter.FrequenciesCalculated event) {
         return new AggregateWordFrequencies(event.frequencies());
     }
@@ -81,11 +87,15 @@ public class Coordinator extends AbstractBehavior<Coordinator.Command> {
         return Behaviors.stopped();
     }
 
-    public interface Command {};
+    public interface Command {
+        Eof EOF = new Eof();
+    }
 
     public interface Event {}
 
     public record CountWordFrequencies(String sentence) implements Command{}
 
     public record AggregateWordFrequencies(Map<String, Long> frequencies) implements Command{}
+
+    public record Eof() implements Command{};
 }
