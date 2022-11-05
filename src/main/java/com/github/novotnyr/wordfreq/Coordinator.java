@@ -34,8 +34,9 @@ public class Coordinator extends AbstractBehavior<Coordinator.Command> {
     }
 
     private static Behavior<WordFrequencyCounter.Command> createSupervisedWorker() {
-        return Behaviors.supervise(WordFrequencyCounter.create())
-                        .onFailure(IllegalStateException.class, SupervisorStrategy.restart());
+        return Behaviors.supervise(Behaviors.supervise(WordFrequencyCounter.create())
+                                            .onFailure(IllegalStateException.class, SupervisorStrategy.restart()))
+                        .onFailure(UnsupportedOperationException.class, SupervisorStrategy.stop());
     }
 
     @Override
