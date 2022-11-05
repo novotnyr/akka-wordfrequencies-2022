@@ -3,6 +3,7 @@ package com.github.novotnyr.wordfreq;
 import akka.actor.typed.ActorRef;
 import akka.actor.typed.Behavior;
 import akka.actor.typed.SupervisorStrategy;
+import akka.actor.typed.Terminated;
 import akka.actor.typed.javadsl.AbstractBehavior;
 import akka.actor.typed.javadsl.ActorContext;
 import akka.actor.typed.javadsl.Behaviors;
@@ -23,6 +24,8 @@ public class Coordinator extends AbstractBehavior<Coordinator.Command> {
         super(context);
         this.workers = context.spawn(createPool(), "workers");
         this.messageAdapter = context.messageAdapter(WordFrequencyCounter.FrequenciesCalculated.class, this::onFrequenciesCalculated);
+
+        context.watch(this.workers);
     }
 
     public static Behavior<Command> create() {
@@ -44,6 +47,7 @@ public class Coordinator extends AbstractBehavior<Coordinator.Command> {
         return newReceiveBuilder()
                 .onMessage(CountWordFrequencies.class, this::calculateWordFrequencies)
                 .onMessage(AggregateWordFrequencies.class, this::aggregateWordFrequencies)
+                .onSignal(Terminated.class, this::onTerminated)
                 .build();
     }
 
@@ -70,6 +74,11 @@ public class Coordinator extends AbstractBehavior<Coordinator.Command> {
 
     private Command onFrequenciesCalculated(WordFrequencyCounter.FrequenciesCalculated event) {
         return new AggregateWordFrequencies(event.frequencies());
+    }
+
+    private Behavior<Command> onTerminated(Terminated signal) {
+        getContext().getLog().warn("Worked pool terminated, shutting down");
+        return Behaviors.stopped();
     }
 
     public interface Command {};
